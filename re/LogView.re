@@ -20,11 +20,6 @@ let entryData = (e:Db.entry):entryData =>
                                         end_: Some(e)}}
   };
 
-let listStyle = Style.(style([
-  backgroundColor("#ddddee"),
-  width(Pct(100.))
-]));
-
 module Day = {
   let component = ReasonReact.statelessComponent("Day");
   let make = (~date, ~total, ~balance, children) => {
@@ -32,7 +27,7 @@ module Day = {
     render: _self => {
       let date' = date|> Moment.format(Prefs.date_format);
 
-      NativeBase.(Style.(
+      NativeBase.(
         <Card>
           <CardItem  header=true>
             <NativeBase.Text value=date'/>
@@ -45,7 +40,7 @@ module Day = {
               ...children
           </View>
         </Card>
-      ))
+      )
     }
   }
 };
@@ -85,14 +80,12 @@ let renderDay = (stats:dbstats, day:Db.day) => {
 
 let component = ReasonReact.statelessComponent("LogView");
 
-
 let keyExtractor = (item, i) => {j|$i$item|j};
 
 let renderItem = (stats, item: item) => renderDay(stats, item.item);
 
-let make = (~stats, ~days:array(Db.day), ~sections, _children) => {
+let make = (~stats, ~days:array(Db.day), _children) => {
   ...component,
-
   render: _self => {
     /* FIXME should hash this one */
     <FlatList data=days renderItem=FlatList.renderItem(renderItem(stats)) keyExtractor=keyExtractor />

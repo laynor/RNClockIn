@@ -11,8 +11,7 @@ module MyApp = {
   let persist(db:Db.db) = {
     /* convert state to JSON */
     let stateAsJson = Db.toJson(db);
-    Js.Console.warn(stateAsJson);
-    let _ = AsyncStorage.setItem(
+    AsyncStorage.setItem(
       "ClockIn.state",
       stateAsJson,
       ~callback=
@@ -21,9 +20,7 @@ module MyApp = {
         | None => ()
         | Some(err) => Js.log(err)
         },
-      ()
-    );
-    ()
+      ()) |> ignore;
   };
 
   let rehydrate = (self:ReasonReact.self(state, ReasonReact.noRetainedProps, action)) => {
@@ -31,15 +28,14 @@ module MyApp = {
       /* begin call to AsyncStorage */
       AsyncStorage.getItem("ClockIn.state", ())
       |> then_(
-          json =>
-            switch json {
-            | None => ()
-            | Some(s) =>
-              /* parse JSON, decode it into a ReasonML Record, and reset the state */
-              let db = Db.fromJson(s);
-              self.send(Rehydrate(db));
-              ()
-            }|> resolve) |> ignore
+          json => switch json {
+          | None => ()
+          | Some(s) =>
+            /* parse JSON, decode it into a ReasonML Record, and reset the state */
+            let db = Db.fromJson(s);
+            self.send(Rehydrate(db));
+          }|> resolve
+        ) |> ignore
     );
   };
 
@@ -86,24 +82,23 @@ module MyApp = {
       rehydrate(self),
 
     render: self => {
-      let onClick = () => self.send(Click);
+      let onPress = () => self.send(Click);
 
       let stats   = self.state.db |> Db.Stats.dbstats;
 
-      let day2Section = (day:Db.day) => {
-        SectionList.section(~data=Array.of_list(day.entries), ~key=day.date, ());
-      };
+      let (renderIcon, buttonColor) =
+        Db.punchedin(self.state.db)
+        ? (renderStopIcon, Colors.black)
+        : (renderRecordIcon, Colors.red);
 
-      let sections = self.state.db |> List.map(day2Section) |> Array.of_list |> SectionList.sections;
-
-      let (renderIcon, color) = Db.punchedin(self.state.db) ? (renderStopIcon, Colors.black) : (renderRecordIcon, Colors.red);
+      let days = self.state.db |> Array.of_list;
 
       <View style=styles##container>
         <View style=styles##logViewWrapper>
-          <LogView sections=sections days=(self.state.db |> Array.of_list) stats=stats />
+          <LogView days stats />
         </View>
         <Summary stats=stats size=50. />
-        <ActionButton renderIcon=renderIcon buttonColor=color onPress=onClick />
+        <ActionButton renderIcon buttonColor onPress />
       </View>;
     }
   }

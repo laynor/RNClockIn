@@ -1,4 +1,3 @@
-open BsReactNative;
 [@bs.module "react-native-action-button"] external actionButton:ReasonReact.reactClass = "default";
 
 let make = (~style=?, ~renderIcon=?, ~onPress=?, ~buttonColor=?, children) =>
