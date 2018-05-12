@@ -124,8 +124,10 @@ module Action = {
 
 module Stats = {
   module StringMap = Map.Make(String);
-  type daystats  = {total: float, balance: float};
-  type dbstats   = {
+
+  type daystats = {total: float, balance: float};
+
+  type dbstats  = {
     days: StringMap.t(daystats),
     n_days: int,
     total: float,
@@ -162,6 +164,7 @@ module Stats = {
     {days, total, n_days, expected, balance, average}
   };
 
+
   let emptyDay = {total: 0.0, balance: 0.0 };
   let defaultStat = _entry => emptyDay;
 
@@ -170,6 +173,8 @@ module Stats = {
     | stat => Some(stat)
     | exception Not_found => None
     };
+
+  let daysStatsAsArray = (stats:dbstats) => StringMap.bindings(stats.days) |> Array.of_list;
 
   let days = stats => {
     stats.days

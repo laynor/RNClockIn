@@ -4,9 +4,8 @@ open Db.Stats;
 
 type entryData   = {punchedout: bool, elapsed: Duration.t, entry: Db.entry};
 type sectionData = {date: string, total: float, balance: float};
-
-type item      = SectionList.renderBag(Db.entry);
-type accessory = SectionList.renderAccessory(Db.entry);
+type dayData     = {date: string, total: float, balance: float, entries: array(entryData)};
+type item        = FlatList.renderBag(Db.day);
 
 let entryData = (e:Db.entry):entryData =>
   switch(e) {
@@ -14,6 +13,7 @@ let entryData = (e:Db.entry):entryData =>
                              elapsed: durationMillis(truncate(0.5 +. diff(momentNow(), s, `milliseconds))),
                              entry: {start:s,
                                      end_: None}};
+
   | {start:s, end_:Some(e)} => {punchedout:true,
                                 elapsed: durationMillis(truncate(0.5 +. diff(e, s, `milliseconds))),
                                 entry: {start: s,
@@ -25,85 +25,76 @@ let listStyle = Style.(style([
   width(Pct(100.))
 ]));
 
-module SectionHeader = {
-  let component = ReasonReact.statelessComponent("SectionHeader");
-  let make = (~date, ~total, ~balance, _children) => {
+module Day = {
+  let component = ReasonReact.statelessComponent("Day");
+  let make = (~date, ~total, ~balance, children) => {
     ...component,
     render: _self => {
-      let date' = date |> moment |> Moment.format(Prefs.date_format);
-      Style.(
-        <NativeBase.Card>
-          <NativeBase.CardItem  header=false>
-            <NativeBase.Text value={j|$date' total: $total balance: $balance |j}  />
-          </NativeBase.CardItem>
-        </NativeBase.Card>
+      let date' = date|> Moment.format(Prefs.date_format);
+
+      NativeBase.(Style.(
+        <Card>
+          <CardItem  header=true>
+            <NativeBase.Text value=date'/>
+          </CardItem>
+          <CardItem>
+            <Summary.StatView title="Tot" size=30. value={j|$total|j} />
+            <Summary.StatView title="Bal" size=30. value={j|$balance|j} />
+          </CardItem>
+          <View>
+              ...children
+          </View>
+        </Card>
+      ))
+    }
+  }
+};
+
+module Entry = {
+  let component = ReasonReact.statelessComponent("Entry");
+  let make = (~punchinTime, _children) => {
+    ...component,
+    render: _self => {
+      NativeBase.(
+        <CardItem header=(false)>
+          <NativeBase.Text value=punchinTime />
+        </CardItem>
       )
     }
   }
 };
 
-module ListItem = {
-  let component = ReasonReact.statelessComponent("ListItem");
-  let make = (~entryData as data:entryData, _children) => {
-    ...component,
-    render: _self => {
-      let {elapsed: elap, entry: {start: s, end_: e}} = data;
+let findDayStats = (date, stats) =>
+  switch (find(date, stats)) {
+  | Some(stats') => stats'
+  | None         => emptyDay
+  };
 
-      let start = Moment.format("YYYY-MM-DD HH:mm:ss", s);
-
-      let dur   = Duration.humanize(elap);
-
-      let v =
-        switch(e) {
-        | Some(e2) =>
-          let end_ = Moment.format("YYYY-MM-DD HH:mm:ss", e2);
-          {j|out= $end_ ($dur) |j}
-
-        | None => {j|in @$start|j}
-        };
-
-      <TouchableOpacity style=Style.(style([height(Pt(30.))]))>
-        <Text value=v />
-      </TouchableOpacity>
-    }
-  }
+let renderDay = (stats:dbstats, day:Db.day) => {
+  let date = day.date;
+  let stats = findDayStats(date, stats);
+  let children =
+    day.entries
+    |> List.map((entry:Db.entry) => Moment.format("HH:MM", entry.start))
+    |> List.map((punchinTime) => <Entry punchinTime=punchinTime />)
+    |> Array.of_list;
+  <Day date=moment(day.date) total=stats.total balance=stats.balance>
+    ...children
+  </Day>
 };
 
 let component = ReasonReact.statelessComponent("LogView");
 
-let findDayStats = (date, stats) =>
-  switch date {
-  | Some(date') =>
-    switch (find(date', stats)) {
-    | Some(stats') => stats'
-    | None => emptyDay
-    };
-  | None => emptyDay
-  };
 
 let keyExtractor = (item, i) => {j|$i$item|j};
 
-let renderItem = (item:item) => <ListItem entryData=entryData(item.item) />;
+let renderItem = (stats, item: item) => renderDay(stats, item.item);
 
-let renderSectionHeader = (stats, foo:accessory) => {
-  let date = foo.section.key;
-  let {total: total, balance: balance}:daystats = findDayStats(date, stats);
-  let d = switch date {
-  | None => "<missing>"
-  | Some(d') => d'
-  };
-  <SectionHeader date=d total=total balance=balance />
-};
-
-
-let make = (~stats, ~sections, _children) => {
+let make = (~stats, ~days:array(Db.day), ~sections, _children) => {
   ...component,
 
   render: _self => {
     /* FIXME should hash this one */
-    <SectionList sections            = sections
-                 renderItem          = SectionList.renderItem(renderItem)
-                 renderSectionHeader = SectionList.renderAccessoryView(renderSectionHeader(stats))
-                 keyExtractor        = keyExtractor />;
+    <FlatList data=days renderItem=FlatList.renderItem(renderItem(stats)) keyExtractor=keyExtractor />
   }
 };

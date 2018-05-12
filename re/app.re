@@ -100,7 +100,7 @@ module MyApp = {
 
       <View style=styles##container>
         <View style=styles##logViewWrapper>
-          <LogView sections=sections stats=stats />
+          <LogView sections=sections days=(self.state.db |> Array.of_list) stats=stats />
         </View>
         <Summary stats=stats size=50. />
         <ActionButton renderIcon=renderIcon buttonColor=color onPress=onClick />
