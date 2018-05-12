@@ -2,4 +2,4 @@ import { app } from "./lib/js/re/app.js";
 import React from "react";
 import { AppRegistry } from 'react-native';
 
-AppRegistry.registerComponent('ReasonTest', () => app);
+AppRegistry.registerComponent('ClockIn', () => app);
