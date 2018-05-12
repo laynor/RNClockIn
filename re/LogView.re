@@ -8,7 +8,7 @@ type sectionData = {date: string, total: float, balance: float};
 type item      = SectionList.renderBag(Db.entry);
 type accessory = SectionList.renderAccessory(Db.entry);
 
-let entryData = (e:Db.entry):entryData => {
+let entryData = (e:Db.entry):entryData =>
   switch(e) {
   | {start:s, end_:None} => {punchedout: false,
                              elapsed: durationMillis(truncate(0.5 +. diff(momentNow(), s, `milliseconds))),
@@ -19,7 +19,6 @@ let entryData = (e:Db.entry):entryData => {
                                 entry: {start: s,
                                         end_: Some(e)}}
   };
-};
 
 let listStyle = Style.(style([
   backgroundColor("#ddddee"),
@@ -31,10 +30,14 @@ module SectionHeader = {
   let make = (~date, ~total, ~balance, _children) => {
     ...component,
     render: _self => {
-      let date' = date |> moment |> Moment.format("LT");
-      <View>
-        <Text value = {j|$date' total: $total balance: $balance |j} style = Style.(style([backgroundColor(Colors.log_header_color)])) />
-      </View>
+      let date' = date |> moment |> Moment.format(Prefs.date_format);
+      Style.(
+        <NativeBase.Card>
+          <NativeBase.CardItem  header=false>
+            <NativeBase.Text value={j|$date' total: $total balance: $balance |j}  />
+          </NativeBase.CardItem>
+        </NativeBase.Card>
+      )
     }
   }
 };
