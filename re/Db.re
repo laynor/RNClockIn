@@ -89,6 +89,7 @@ let punchedin = (db:db):bool =>
     };
   };
 
+
 module Action = {
   let punchinDay = (day:day, time:Moment.t):day => {
     {...day, entries: [{start:time, end_:None}, ...day.entries]}
@@ -125,48 +126,72 @@ module Action = {
 module Stats = {
   module StringMap = Map.Make(String);
 
-  type daystats = {total: float, balance: float};
+  type entrystats = {entry: entry, duration: Duration.t};
+
+  type daystats = {date: string, total: Duration.t, balance: Duration.t, entries: array(entrystats)};
 
   type dbstats  = {
     days: StringMap.t(daystats),
     n_days: int,
-    total: float,
-    expected: float,
-    balance: float,
-    average: float,
+    total: Duration.t,
+    expected: Duration.t,
+    balance: Duration.t,
+    average: Duration.t,
   };
 
-  let entryHours = (e:entry) =>
+  let entryDuration = (e:entry): Duration.t =>
     switch e.end_ {
-    | None => 0.
-    | Some(m) => diff(m, e.start, `hours);
-    };
+    | None => diff(momentNow(), e.start, `milliseconds)
+    | Some(m) => diff(m, e.start, `milliseconds);
+    } |> truncate |> durationMillis;
+
+
+  let test = () => {
+    Js.Console.warn(diff(moment("2018-05-05 15:30"), moment("2018-05-05 15:50"), `hours));
+  };
 
   let dayTotal = (day:day) => {
-    day.entries
-    |> List.map(entryHours)
-    |> List.fold_left((x, y) => x +. y, 0.)
+    let minutes =
+      day.entries
+      |> List.map(entryDuration)
+      |> List.map(Duration.asMinutes)
+      |> List.fold_left((x, y) => x +. y, 0.);
+
+    duration(truncate(minutes), `minutes)
   };
 
-  let dayStats = (day:day) => {
+  let daystats = (day:day) => {
+    let entries =
+      day.entries
+      |> List.map(entry => {entry: entry, duration: entryDuration(entry)})
+      |> Array.of_list;
     let total = dayTotal(day);
-    {total: total, balance: total -. Prefs.hours_a_day}
+    {
+      total: total,
+      balance: Util.MomentExt.dursub(total, durationFormat(Prefs.worktime)),
+      date: day.date,
+      entries: entries
+    }
   };
+
 
   let dbstats = (db:db):dbstats => {
+    open Util.MomentExt;
     let empty = StringMap.empty;
-    let days  = List.fold_left((stats, day) => StringMap.add(day.date, dayStats(day), stats), empty, db);
+    let days  = List.fold_left((stats, day:day) => StringMap.add(day.date, daystats(day), stats), empty, db);
     let n_days = StringMap.cardinal(days);
-    let expected = float(n_days) *. Prefs.hours_a_day;
-    let total = StringMap.fold((_, value:daystats, acc) => acc +. value.total, days, 0.0);
-    let balance  = total -. expected;
-    let average = total /. float(n_days);
+    let expected = durmul(float(n_days), durationFormat(Prefs.worktime));
+    let total = StringMap.fold((_, value:daystats, acc) => dursum([acc, value.total]),
+                               days,
+                               durzero);
+    let balance = dursub(total, expected);
+    let average = durmul(1.0 /. float(n_days), total);
     {days, total, n_days, expected, balance, average}
   };
 
 
-  let emptyDay = {total: 0.0, balance: 0.0 };
-  let defaultStat = _entry => emptyDay;
+  let emptyDay(date) = Util.MomentExt.{total: durzero, balance: durzero, date: date, entries: [||]};
+  let defaultStat = entry => emptyDay(Moment.format(Prefs.date_format, entry.start));
 
   let find = (date, db:dbstats) =>
     switch (StringMap.find(date, db.days)) {

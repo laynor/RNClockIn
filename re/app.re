@@ -42,7 +42,8 @@ module MyApp = {
   let onClickAction = (s:state) => {
     let db = s.db;
     let action = Db.punchedin(db) ? Db.Action.punchout : Db.Action.punchin;
-    let newdb = action(momentNow(), db);
+    let now = momentNow();
+    let newdb = action(now, db);
     ReasonReact.UpdateWithSideEffects({db:newdb},
                                       _self => persist(newdb))
   };
@@ -84,18 +85,17 @@ module MyApp = {
     render: self => {
       let onPress = () => self.send(Click);
 
-      let stats   = self.state.db |> Db.Stats.dbstats;
-
       let (renderIcon, buttonColor) =
         Db.punchedin(self.state.db)
         ? (renderStopIcon, Colors.black)
         : (renderRecordIcon, Colors.red);
 
-      let days = self.state.db |> Array.of_list;
+      let stats = self.state.db |> Db.Stats.dbstats;
+      let statsArray = stats |> Db.Stats.daysStatsAsArray;
 
       <View style=styles##container>
         <View style=styles##logViewWrapper>
-          <LogView days stats />
+          <LogView stats=statsArray />
         </View>
         <Summary stats=stats size=50. />
         <ActionButton renderIcon buttonColor onPress />
