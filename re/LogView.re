@@ -9,8 +9,7 @@ module Day = {
 
   let make = (~date:string, ~total:string, ~balance:string, children) => {
     ...component,
-    render: _self => {
-
+    render: _self =>
       NativeBase.(
         <Card>
           <CardItem header=true >
@@ -28,7 +27,6 @@ module Day = {
           </View>
         </Card>
       )
-    }
   }
 };
 
@@ -64,8 +62,8 @@ let renderDay = ((_, {date, total, balance, entries})) => {
 
         <Entry punchinTime=start punchoutTime=?end_ duration=dur />
       });
-  let total = total |> Duration.humanize;
-  let balance = balance |> Duration.humanize;
+  let total = total |> Util.MomentExt.formatDuration;
+  let balance = balance |> Util.MomentExt.formatDuration;
   let date = moment(date) |> Moment.format(Prefs.date_format);
   <Day date total balance>
     ...children
@@ -74,6 +72,7 @@ let renderDay = ((_, {date, total, balance, entries})) => {
 
 let component = ReasonReact.statelessComponent("LogView");
 
+/* FIXME should hash this one */
 let keyExtractor = (item, i) => {j|$i$item|j};
 
 let renderItem = (item: item) => renderDay(item.item);
@@ -81,7 +80,6 @@ let renderItem = (item: item) => renderDay(item.item);
 let make = (~stats:array((string, daystats)), _children) => {
   ...component,
   render: _self => {
-    /* FIXME should hash this one */
     <FlatList data=stats renderItem=FlatList.renderItem(renderItem) keyExtractor=keyExtractor />
   }
 };

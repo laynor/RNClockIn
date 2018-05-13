@@ -2,7 +2,7 @@ open BsReactNative;
 open MomentRe;
 
 module MyApp = {
-  type state = {db:Db.db};
+  type state = {db:Db.db, fabActive:bool};
 
   type action = Click | Rehydrate(Db.db);
 
@@ -44,26 +44,9 @@ module MyApp = {
     let action = Db.punchedin(db) ? Db.Action.punchout : Db.Action.punchin;
     let now = momentNow();
     let newdb = action(now, db);
-    ReasonReact.UpdateWithSideEffects({db:newdb},
+    ReasonReact.UpdateWithSideEffects({...s, db:newdb},
                                       _self => persist(newdb))
   };
-
-  let styles = StyleSheet.create(Style.({
-    "container":
-      style([flex(1.),
-             justifyContent(Center),
-             alignItems(Center)]),
-
-    "logViewWrapper":
-      style([flex(1.),
-             backgroundColor(Colors.light),
-             width(Pct(100.)),
-             padding(Pt(20.))]),
-
-    "buttonWrapper":
-      style([flex(0.22),
-             margin(Pt(10.))])
-  }));
 
   let renderRecordIcon = (_) => <RNIcons.Entypo name ="controller-record" color =Colors.black />;
   let renderStopIcon   = (_) => <RNIcons.Entypo name ="controller-stop" color   =Colors.red />;
@@ -71,19 +54,19 @@ module MyApp = {
   let make = (_children) => {
     ...component,
 
-    initialState: () => {db:[]},
+    initialState: () => {db:[], fabActive: false},
 
     reducer: (a: action, s:state) =>
       switch(a) {
       | Click => onClickAction(s)
-      | Rehydrate(db) => ReasonReact.Update({db:db})
+      | Rehydrate(db) => ReasonReact.Update({...s, db:db})
       },
 
     didMount: self =>
       rehydrate(self),
 
     render: self => {
-      let onPress = () => self.send(Click);
+      let onPress = () => { Js.Console.warn("pressed"); self.send(Click) };
 
       let (renderIcon, buttonColor) =
         Db.punchedin(self.state.db)
@@ -93,13 +76,50 @@ module MyApp = {
       let stats = self.state.db |> Db.Stats.dbstats;
       let statsArray = stats |> Db.Stats.daysStatsAsArray;
 
-      <View style=styles##container>
-        <View style=styles##logViewWrapper>
-          <LogView stats=statsArray />
-        </View>
-        <Summary stats=stats size=50. />
-        <ActionButton renderIcon buttonColor onPress />
-      </View>;
+      /* let fabContainerStyle = Style.(style([ */
+      /*   height(Pt(100.)), */
+      /*   width(Pt(100.)), */
+      /*   zIndex(100000000000), */
+      /*   right(Pt(16.)), */
+      /*   bottom(Pt(16.)), */
+      /*   position(Absolute)])); */
+
+      NativeBase.(
+        <Container>
+          <Header>
+            <Left>
+              <NativeBase.Button transparent=true>
+                <Icon name="menu" />
+              </NativeBase.Button>
+            </Left>
+            <Body>
+              <Title value="antani" />
+            </Body>
+          </Header>
+          <Content>
+            <NativeBase.View>
+              <LogView stats=statsArray />
+            </NativeBase.View>
+          </Content>
+
+          /* <NativeBase.View style=fabContainerStyle> */
+          /*   <ActionButton renderIcon buttonColor onPress /> */
+          /* </NativeBase.View> */
+
+          <Fab onPress>
+            <NativeBase.Icon name="mail" />
+            /* <NativeBase.Button style=Style.(style([backgroundColor(buttonColor)]))> */
+            /*   <NativeBase.Text value="foo" /> */
+            /* </NativeBase.Button> */
+            /* <NativeBase.Button style=Style.(style([backgroundColor(buttonColor)]))> */
+            /*   <NativeBase.Text value="foo" /> */
+            /* </NativeBase.Button> */
+          </Fab>
+          <Footer>
+            <Summary stats=stats size=50. />
+          </Footer>
+        </Container>
+      )
     }
   }
 };

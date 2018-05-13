@@ -1,5 +1,6 @@
 open BsReactNative;
 open Db.Stats;
+open MomentRe;
 
 module StatView = {
   let component = ReasonReact.statelessComponent("StatView");
@@ -40,9 +41,23 @@ let styles = StyleSheet.create(Style.({
 let make = (~stats as {average, balance}:dbstats, ~size=?, _children) => {
   ...component,
   render: _self => {
+    open Util.MomentExt;
+
+    let hours = balance |> Duration.asHours;
+
+    let average = average |> formatDuration;
+    let balance = balance |> formatDuration;
+
+    let color = switch hours {
+      | n when n >= 0.0 => Colors.green;
+      | n when n <= Prefs.balance_warn_strong => Colors.red;
+      | n when n <= Prefs.balance_warn_mild => Colors.yellow;
+      | _ => Colors.light_green
+    };
+
     <View style=styles##stats>
         <StatView title="Avg" size=?size value={j|$average|j} />
-        <StatView title="Bal" size=?size value={j|$balance|j} />
+        <StatView title="Bal" backgroundColor=color size=?size value={j|$balance|j} />
     </View>
   }
 };

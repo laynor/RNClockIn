@@ -5,6 +5,18 @@ let tryApply = (fn, ~default=None, value) =>
   | (None, d)    => d
   };
 
+let sign = (n:int):int =>
+  switch n {
+  | 0 => 0
+  | _ => n / abs(n)
+  };
+
+let sign_float = (x:float):int =>
+  switch x {
+  | 0.0 => 0
+  | _ => truncate(x /. abs_float(x))
+  };
+
 module MomentExt = {
   open MomentRe;
   type dt = Duration.t;
@@ -29,9 +41,17 @@ module MomentExt = {
     n *.  Duration.asMilliseconds(d) |> truncate |> durationMillis;
 
 
-  let negateDuration = (d:Duration.t) => {
+  let negateDuration = (d:dt) => {
     let millis = d |> Duration.asMilliseconds;
     durationMillis(-truncate(millis));
+  };
+
+  let sign_duration = (d:dt) => Duration.asMilliseconds(d) |> sign_float;
+
+  let formatDuration = (d:dt) => {
+    let hours = d |> Duration.asHours |> truncate;
+    let minutes = d |> Duration.minutes |> abs;
+    {j|$hours:$minutes|j}
   };
 
 };
