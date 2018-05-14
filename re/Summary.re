@@ -12,10 +12,10 @@ module StatView = {
                   alignItems(Center),
                   borderRadius(size /. 10.0),
                   margin(Pt(4.)),
-                  backgroundColor(color')]));
+                  backgroundColor(String(color'))]));
   let textStyle = (color', size) =>
     Style.(style([alignSelf(Center),
-                  color(color'),
+                  color(String(color')),
                   fontSize(Float(size))]));
 
   let make = (~title, ~value, ~size=100.0, ~backgroundColor="green", ~color="white",  _children) => {

@@ -4,29 +4,58 @@ open Db.Stats;
 
 type item = FlatList.renderBag((string, daystats));
 
+let header_height = 64.;
+let footer_height = 64.;
+
+let styles =   StyleSheet.create(Style.({
+  "card":
+    style([margin(Pt(4.)),
+           padding(Pt(16.)),
+           paddingTop(Pt(8.)),
+           paddingBottom(Pt(8.)),
+           elevation(2.),
+           shadowColor(String("black")),
+           shadowOffset(~height=30., ~width=4.),
+           shadowRadius(4.),
+           borderRadius(6.),
+           borderColor(String("#AAAAAA"))]),
+
+  "date":
+    style([fontSize(Float(24.)),
+           textAlignVertical(Center)]),
+
+  "entry":
+    style([fontSize(Float(13.)),
+           margin(Pt(4.))]),
+
+  "stats":
+    style([fontSize(Float(16.))]),
+
+  "cardItem":
+    style([flexDirection(Row), flex(1.)]),
+}));
+
 module Day = {
   let component = ReasonReact.statelessComponent("Day");
 
   let make = (~date:string, ~total:string, ~balance:string, children) => {
     ...component,
     render: _self =>
-      NativeBase.(
-        <Card>
-          <CardItem header=true >
-            <NativeBase.Text value=date />
-            <View style=Style.(style([flex(1.)])) />
-            <Card>
-              <CardItem>
-                <NativeBase.Text value={j|total: $total\nbalance: $balance|j} />
-              </CardItem>
-            </Card>
-          </CardItem>
-
-          <View>
-              ...children
+      <View style=styles##card>
+        <View style=styles##cardItem>
+          <Text value=date style=styles##date />
+          <View style=Style.(style([flex(1.)])) />
+          <View style=styles##card>
+            <View style=styles##cardItem>
+              <Text style=styles##stats value={j|total: $total\nbalance: $balance|j} />
+            </View>
           </View>
-        </Card>
-      )
+        </View>
+
+        <View>
+          ...children
+        </View>
+      </View>
   }
 };
 
@@ -40,11 +69,9 @@ module Entry = {
         | Some(_) => {j|$(punchinTime)~$(punchoutTime) ($(duration))|j}
         | None    => {j|$punchinTime ($(duration))|j}
         };
-      NativeBase.(
-        <CardItem header=(false)>
-          <NativeBase.Text value=value />
-        </CardItem>
-      )
+        <View style=styles##cardItem>
+          <Text style=styles##entry value=value />
+        </View>
     }
   }
 };

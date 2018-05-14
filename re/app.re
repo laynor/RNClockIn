@@ -1,6 +1,58 @@
 open BsReactNative;
 open MomentRe;
 
+let header_height = 64.;
+let footer_height = 64.;
+let fabRadius = 200.;
+
+let styles =   StyleSheet.create(Style.({
+  "container":
+    style([flex(1.)]),
+
+  "header":
+    style([width(Pct(100.)),
+           height(Pt(header_height)),
+           flexDirection(Row),
+           backgroundColor(String(Colors.blue_primary))]),
+
+  "footer":
+    style([width(Pct(100.)),
+           height(Pt(footer_height)),
+           bottom(Pt(0.)),
+           flexDirection(Row),
+           backgroundColor(String(Colors.blue_primary))]),
+
+  "fabStyle":
+    style([height(Pct(100.)),
+           elevation(2.),
+           width(Pct(100.)),
+           zIndex(100)]),
+
+  "left":
+    style([flex(1.), borderWidth(1.), borderColor(String(Colors.black))]),
+
+  "body":
+    style([flex(1.)]),
+
+  "content":
+    style([flex(1.)]),
+
+  "right":
+    style([flex(1.)])
+}));
+
+let module Container = {
+  let component = ReasonReact.statelessComponent("Container");
+
+  let make = (children) => {
+    ...component,
+    render: _self =>
+      <View style=styles##container>
+        ...children
+      </View>
+  }
+};
+
 module MyApp = {
   type state = {db:Db.db, fabActive:bool};
 
@@ -48,8 +100,8 @@ module MyApp = {
                                       _self => persist(newdb))
   };
 
-  let renderRecordIcon = (_) => <RNIcons.Entypo name ="controller-record" color =Colors.black />;
-  let renderStopIcon   = (_) => <RNIcons.Entypo name ="controller-stop" color   =Colors.red />;
+  let renderRecordIcon = (_) => <RNIcons.Entypo size=24. name="controller-record" color= Colors.black />;
+  let renderStopIcon   = (_) => <RNIcons.Entypo size=24. name="controller-stop"   color= Colors.red />;
 
   let make = (_children) => {
     ...component,
@@ -67,6 +119,7 @@ module MyApp = {
 
     render: self => {
       let onPress = () => { Js.Console.warn("pressed"); self.send(Click) };
+      let onMenuPress = () => { Js.Console.warn("menu pressed") };
 
       let (renderIcon, buttonColor) =
         Db.punchedin(self.state.db)
@@ -76,50 +129,29 @@ module MyApp = {
       let stats = self.state.db |> Db.Stats.dbstats;
       let statsArray = stats |> Db.Stats.daysStatsAsArray;
 
-      /* let fabContainerStyle = Style.(style([ */
-      /*   height(Pt(100.)), */
-      /*   width(Pt(100.)), */
-      /*   zIndex(100000000000), */
-      /*   right(Pt(16.)), */
-      /*   bottom(Pt(16.)), */
-      /*   position(Absolute)])); */
+      let module Body = View;
+      let module Content = View;
+      let module Fab = Button;
+      let module Footer = View;
 
-      NativeBase.(
-        <Container>
-          <Header>
-            <Left>
-              <NativeBase.Button transparent=true>
-                <Icon name="menu" />
-              </NativeBase.Button>
-            </Left>
-            <Body>
-              <Title value="antani" />
-            </Body>
-          </Header>
-          <Content>
-            <NativeBase.View>
-              <LogView stats=statsArray />
-            </NativeBase.View>
-          </Content>
+      <View style=styles##container>
+        <View style=styles##header>
+          <View style=styles##left>
+          </View>
+          <View style=styles##body>
+            <Text value="antani" />
+          </View>
+          <View style=styles##right />
+        </View>
+        <View style=styles##content>
+          <LogView stats=statsArray />
+        </View>
 
-          /* <NativeBase.View style=fabContainerStyle> */
-          /*   <ActionButton renderIcon buttonColor onPress /> */
-          /* </NativeBase.View> */
-
-          <Fab onPress>
-            <NativeBase.Icon name="mail" />
-            /* <NativeBase.Button style=Style.(style([backgroundColor(buttonColor)]))> */
-            /*   <NativeBase.Text value="foo" /> */
-            /* </NativeBase.Button> */
-            /* <NativeBase.Button style=Style.(style([backgroundColor(buttonColor)]))> */
-            /*   <NativeBase.Text value="foo" /> */
-            /* </NativeBase.Button> */
-          </Fab>
-          <Footer>
-            <Summary stats=stats size=50. />
-          </Footer>
-        </Container>
-      )
+        <View style=styles##footer>
+          <Summary stats=stats size=50. />
+        </View>
+        <ActionButton renderIcon buttonColor onPress />
+      </View>
     }
   }
 };
