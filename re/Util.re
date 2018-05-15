@@ -51,7 +51,24 @@ module MomentExt = {
   let formatDuration = (d:dt) => {
     let hours = d |> Duration.asHours |> truncate;
     let minutes = d |> Duration.minutes |> abs;
-    {j|$hours:$minutes|j}
+    let s_minutes = minutes < 10 ? {j|0$minutes|j} : {j|$minutes|j};
+    {j|$hours:$s_minutes|j}
   };
 
 };
+
+let balanceColor = (hours) =>
+  switch hours {
+  | n when n >= 0.0 => Colors.green;
+  | n when n <= Prefs.balance_warn_strong => Colors.red;
+  | n when n <= Prefs.balance_warn_mild => Colors.yellow;
+  | _ => Colors.light_green
+  };
+
+let dayBalanceColor = (hours) =>
+  switch hours {
+  | n when n >= 0.0 => Colors.green;
+  | n when n <= 4.0 => Colors.red;
+  | n when n <= 7.0 => Colors.yellow;
+  | _ => Colors.light_green
+  };

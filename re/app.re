@@ -7,7 +7,7 @@ let fabRadius = 200.;
 
 let styles =   StyleSheet.create(Style.({
   "container":
-    style([flex(1.)]),
+    style([flex(1.), flexDirection(Row)]),
 
   "header":
     style([width(Pct(100.)),
@@ -23,10 +23,7 @@ let styles =   StyleSheet.create(Style.({
            backgroundColor(String(Colors.blue_primary))]),
 
   "fabStyle":
-    style([height(Pct(100.)),
-           elevation(2.),
-           width(Pct(100.)),
-           zIndex(100)]),
+    style([elevation(10.), ]),
 
   "left":
     style([flex(1.), borderWidth(1.), borderColor(String(Colors.black))]),
@@ -36,6 +33,9 @@ let styles =   StyleSheet.create(Style.({
 
   "content":
     style([flex(1.)]),
+
+  "sidebar":
+    style([flexDirection(Column), marginTop(Pt(4.)), marginLeft(Pt(2.))]),
 
   "right":
     style([flex(1.)])
@@ -129,28 +129,18 @@ module MyApp = {
       let stats = self.state.db |> Db.Stats.dbstats;
       let statsArray = stats |> Db.Stats.daysStatsAsArray;
 
-      let module Body = View;
-      let module Content = View;
-      let module Fab = Button;
-      let module Footer = View;
+      let average = stats.average |> Util.MomentExt.formatDuration;
+      let balance = stats.balance |> Util.MomentExt.formatDuration;
 
       <View style=styles##container>
-        <View style=styles##header>
-          <View style=styles##left>
-          </View>
-          <View style=styles##body>
-            <Text value="antani" />
-          </View>
-          <View style=styles##right />
+        <View style=styles##sidebar>
+          <Summary stats size=40. />
         </View>
         <View style=styles##content>
           <LogView stats=statsArray />
-        </View>
 
-        <View style=styles##footer>
-          <Summary stats=stats size=50. />
+          <ActionButton renderIcon buttonColor onPress  />
         </View>
-        <ActionButton renderIcon buttonColor onPress />
       </View>
     }
   }

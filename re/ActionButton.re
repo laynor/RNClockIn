@@ -7,7 +7,8 @@ let make = (~style=?, ~renderIcon=?, ~onPress=?, ~buttonColor=?, children) =>
     "renderIcon":  Js.Undefined.fromOption(renderIcon),
     "style":       Js.Undefined.fromOption(style),
     "onPress":     Js.Undefined.fromOption(onPress),
-    "buttonColor": Js.Undefined.fromOption(buttonColor)
+    "buttonColor": Js.Undefined.fromOption(buttonColor),
+    "fixNativeFeedbackRadius": true
   },
   children
 );

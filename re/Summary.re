@@ -10,6 +10,7 @@ module StatView = {
                   flexDirection(Column),
                   justifyContent(Center),
                   alignItems(Center),
+                  elevation(1.),
                   borderRadius(size /. 10.0),
                   margin(Pt(4.)),
                   backgroundColor(String(color'))]));
@@ -33,7 +34,7 @@ let component = ReasonReact.statelessComponent("Summary");
 
 let styles = StyleSheet.create(Style.({
   "stats":
-    style([flexDirection(Row),
+    style([flexDirection(Column),
            justifyContent(Center),
            alignItems(Center)]),
 }));
@@ -56,8 +57,8 @@ let make = (~stats as {average, balance}:dbstats, ~size=?, _children) => {
     };
 
     <View style=styles##stats>
-        <StatView title="Avg" size=?size value={j|$average|j} />
-        <StatView title="Bal" backgroundColor=color size=?size value={j|$balance|j} />
+        <StatView title={j|μ|j} size=?size value={j|$average|j} />
+        <StatView title={j|Δ|j} backgroundColor=color size=?size value={j|$balance|j} />
     </View>
   }
 };
