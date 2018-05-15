@@ -134,7 +134,7 @@ module MyApp = {
         </View>
         <View style=styles##content>
           <LogView stats=statsArray />
-          <ActionButton renderIcon buttonColor onPress  />
+          <ActionButton renderIcon buttonColor onPress position="center" />
         </View>
       </View>
     }
