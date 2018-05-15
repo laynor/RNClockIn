@@ -118,8 +118,7 @@ module MyApp = {
       rehydrate(self),
 
     render: self => {
-      let onPress = () => { Js.Console.warn("pressed"); self.send(Click) };
-      let onMenuPress = () => { Js.Console.warn("menu pressed") };
+      let onPress = () => { self.send(Click) };
 
       let (renderIcon, buttonColor) =
         Db.punchedin(self.state.db)
@@ -129,16 +128,12 @@ module MyApp = {
       let stats = self.state.db |> Db.Stats.dbstats;
       let statsArray = stats |> Db.Stats.daysStatsAsArray;
 
-      let average = stats.average |> Util.MomentExt.formatDuration;
-      let balance = stats.balance |> Util.MomentExt.formatDuration;
-
       <View style=styles##container>
         <View style=styles##sidebar>
           <Summary stats size=40. />
         </View>
         <View style=styles##content>
           <LogView stats=statsArray />
-
           <ActionButton renderIcon buttonColor onPress  />
         </View>
       </View>
